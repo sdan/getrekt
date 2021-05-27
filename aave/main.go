@@ -76,8 +76,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	fmt.Println("start tweet")
 	// newContractAbi := &ILendingPoolStruct{contract: bind.NewBoundContract(contractAddress, contractAbi, nil, nil, nil)}
+	sendTweet("hey")
+	fmt.Println("out tweet")
 
 	for {
 		select {
