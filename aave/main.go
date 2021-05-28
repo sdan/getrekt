@@ -76,10 +76,14 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println("start tweet")
-	// newContractAbi := &ILendingPoolStruct{contract: bind.NewBoundContract(contractAddress, contractAbi, nil, nil, nil)}
-	sendTweet("hey")
-	fmt.Println("out tweet")
+
+	// tokenAddress := common.HexToAddress("0x6b175474e89094c44da98b954eedeac495271d0f")
+	// instance, _ := NewToken(tokenAddress, client)
+	// name, err := instance.Name(&bind.CallOpts{})
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Println("hardcode namu:", name)
 
 	for {
 		select {
@@ -97,6 +101,20 @@ func main() {
 				log.Fatal(err)
 			}
 			fmt.Println("evn", event.Amount)
+			// tokenAdd := event.Reserve
+			// token, _ := NewToken(tokenAdd, client)
+			fmt.Println("raw", event.Raw)
+			fmt.Println("braw", event)
+			fmt.Println("user", event.User.String())
+			tokenAddress := event.Raw.Address.Hex()
+			fmt.Println("TOK HASH", tokenAddress)
+			// instance, _ := NewToken(tokenAddress, client)
+			// name, err := instance.Name(&bind.CallOpts{})
+			// if err != nil {
+			// 	log.Fatal(err)
+			// }
+			// fmt.Println("non hardcody namu:", name)
+
 			// fmt.Println("amt", ILendingPoolDeposit{}.Amount.String())
 			// fmt.Println("amt", ILendingPoolDeposit{}.Amount)
 			// fmt.Println("raw", vLog.Data)

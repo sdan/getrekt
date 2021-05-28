@@ -18,7 +18,7 @@ func sendTweet(tweetIn string) {
 	client := twitter.NewClient(httpClient)
 
 	// Send a Tweet
-	tweet, resp, err := client.Statuses.Update("just setting up my twttr", nil)
+	tweet, resp, err := client.Statuses.Update("Liquidated 20000 Dai Stablecoin on Aave", nil)
 	fmt.Println("send it!", tweet, resp)
 	if err != nil {
 		log.Fatal(err)
