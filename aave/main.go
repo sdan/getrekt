@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"math/big"
 	"strings"
 
@@ -51,14 +52,6 @@ func main() {
 	fmt.Println("we have a connection")
 	_ = client // we'll use this in the upcoming sections
 
-	account := common.HexToAddress("0xa5b5E8754e87E9e407F548128855468db9747126")
-	balance, err := client.BalanceAt(context.Background(), account, nil)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	fmt.Println(balance) // 25893180161173005034
-
 	// read da contract
 	contractAddress := common.HexToAddress("0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9")
 	query := ethereum.FilterQuery{
@@ -77,50 +70,21 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// tokenAddress := common.HexToAddress("0x6b175474e89094c44da98b954eedeac495271d0f")
-	// instance, _ := NewToken(tokenAddress, client)
-	// name, err := instance.Name(&bind.CallOpts{})
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// fmt.Println("hardcode namu:", name)
-
 	for {
 		select {
 		case err := <-sub.Err():
 			log.Fatal(err)
 		case vLog := <-logs:
-			// event := new(ILendingPoolLiquidationCall)
-
-			// if err := newContractAbi.contract.UnpackLog(event, "LiquidationCall", vLog); err != nil {
-			// 	log.Fatal("goner", err)
-			// }
 			event := new(ILendingPoolDeposit)
 			err := contractAbi.UnpackIntoInterface(event, "Deposit", vLog.Data)
 			if err != nil {
 				log.Fatal(err)
 			}
-			fmt.Println("evn", event.Amount)
-			// tokenAdd := event.Reserve
-			// token, _ := NewToken(tokenAdd, client)
-			fmt.Println("raw", event.Raw)
-			fmt.Println("braw", event)
-			fmt.Println("user", event.User.String())
-			tokenAddress := event.Raw.Address.Hex()
-			fmt.Println("TOK HASH", tokenAddress)
-			// instance, _ := NewToken(tokenAddress, client)
-			// name, err := instance.Name(&bind.CallOpts{})
-			// if err != nil {
-			// 	log.Fatal(err)
-			// }
-			// fmt.Println("non hardcody namu:", name)
-
-			// fmt.Println("amt", ILendingPoolDeposit{}.Amount.String())
-			// fmt.Println("amt", ILendingPoolDeposit{}.Amount)
-			// fmt.Println("raw", vLog.Data)
-			// fmt.Println("raww", ILendingPoolDeposit{}.Raw)
-			// fmt.Println("amt", event.LiquidatedCollateralAmount)
-			// fmt.Println("asset", event.CollateralAsset)
+			fmt.Println("amt: ", event.Amount)
+			fbalance := new(big.Float)
+			fbalance.SetString(event.Amount.String())
+			ethValue := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
+			fmt.Println("new amt: ", ethValue)
 			fmt.Println(vLog.TxHash.Hex()) // pointer to event log
 		}
 	}
