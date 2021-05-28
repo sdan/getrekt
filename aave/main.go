@@ -69,7 +69,7 @@ func main() {
 	logs := make(chan types.Log)
 	sub, err := client.SubscribeFilterLogs(context.Background(), query, logs)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("subscribe filter logs", err)
 	}
 
 	contractAbi, err := abi.JSON(strings.NewReader(ILendingPoolABI))
@@ -80,14 +80,14 @@ func main() {
 	for {
 		select {
 		case err := <-sub.Err():
-			log.Fatal(err)
+			log.Fatal("for loop sub err", err)
 		case vLog := <-logs:
 			event := new(ILendingPoolLiquidationCall)
 			// evn, err := contractAbi.Unpack("Deposit", vLog.Data)
 			err := contractAbi.UnpackIntoInterface(event, "LiquidationCall", vLog.Data)
 			// fmt.Println("THE EVN", evn)
 			if err != nil {
-				log.Fatal(err)
+				log.Fatal("for vlog err", err)
 			}
 			fmt.Println("amt: ", event.LiquidatedCollateralAmount)
 			fbalance := new(big.Float)
