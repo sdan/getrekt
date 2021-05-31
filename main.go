@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/sdan/getrekt/contracts/aave"
+	token "github.com/sdan/getrekt/contracts/token"
 )
 
 func main() {
@@ -16,17 +17,6 @@ func main() {
 	}
 	fmt.Println("we have a connection")
 	address := common.HexToAddress("0x7d2768de32b0b80b7a3454c06bdac94a69ddc7a9")
-
-	// ap, err := aave.NewAaveLPAP(
-	// 	address, client,
-	// )
-	// if err != nil {
-	// 	log.Fatal("ap", err)
-	// }
-	// pool, err := ap.GetLendingPool(nil)
-	// if err != nil {
-	// 	log.Fatal("pool", err)
-	// }
 
 	lp, err := aave.NewAaveLP(address, client)
 	if err != nil {
@@ -43,12 +33,19 @@ func main() {
 	}
 
 	for {
-		fmt.Println("looking", sub)
 		select {
 		case err := <-sub.Err():
 			log.Fatal("sub aave chan", err)
 		case vLog := <-incoming:
-			fmt.Println("incoming", vLog)
+			token, err := token.NewToken(vLog.Reserve, client)
+			if err != nil {
+				log.Fatal("token retrieve", err)
+			}
+			tokenName, err := token.Name(nil)
+			if err != nil {
+				log.Fatal("token name", err)
+			}
+			fmt.Printf("amt:%s coin: %s", vLog.Amount.String(), tokenName)
 		}
 	}
 
