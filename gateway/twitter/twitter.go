@@ -9,7 +9,7 @@ import (
 	"github.com/dghubble/oauth1"
 )
 
-func SendTweet(amt *big.Float, coin string, tx string) {
+func SendTweet(event string, amt *big.Float, coin string, tx string, protocol string) {
 	fmt.Println("tweet start")
 	config := oauth1.NewConfig("UqrmoFCcV8cIYMjG7GKrNspJw", "HBFXoAAOScCko9XSc9Yk3O1WKI4TnrAOjr4FdkrlqJYP5zzUvv")
 	token := oauth1.NewToken("1248497327125303297-9Pgqq4pWC3anVhPAB1WtW7IEfirWAi", "G2nkE4ItUES0RnpSKxWtNA7kCcra8OW0cMzxYCLia9XZ2")
@@ -19,8 +19,7 @@ func SendTweet(amt *big.Float, coin string, tx string) {
 	client := twitter.NewClient(httpClient)
 
 	// Send a Tweet
-	tweet, resp, err := client.Statuses.Update(fmt.Sprintf("Deposited %.2f of %s on Aave https://etherscan.io/tx/%s", amt, coin, tx), nil)
-	fmt.Println("send it!", tweet, resp)
+	_, _, err := client.Statuses.Update(fmt.Sprintf("%s %.2f of %s on %s https://etherscan.io/tx/%s", event, amt, coin, protocol, tx), nil)
 	if err != nil {
 		log.Fatal(err)
 	}
