@@ -3,11 +3,14 @@ package main
 import (
 	"fmt"
 	"log"
+	"math"
+	"math/big"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/sdan/getrekt/contracts/aave"
-	token "github.com/sdan/getrekt/contracts/token"
+	"github.com/sdan/getrekt/contracts/token"
+	"github.com/sdan/getrekt/gateway/twitter"
 )
 
 func main() {
@@ -45,7 +48,12 @@ func main() {
 			if err != nil {
 				log.Fatal("token name", err)
 			}
-			fmt.Printf("amt:%s coin: %s", vLog.Amount.String(), tokenName)
+			fbalance := new(big.Float)
+			fbalance.SetString(vLog.Amount.String())
+			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
+			fmt.Printf("amt:%.2f coin: %s, tx: %s\n", tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
+			// sendTweet(tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
+			twitter.SendTweet(tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
 		}
 	}
 
