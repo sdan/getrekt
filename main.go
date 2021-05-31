@@ -62,7 +62,7 @@ func main() {
 	// aavebrw := make(chan *aave.AaveLPBorrow)
 
 	compoundliq := make(chan *compound.CETHLiquidateBorrow)
-	compoundmin := make(chan *compound.CETHMint)
+	// compoundmin := make(chan *compound.CETHMint)
 
 	compoundliqcBAT := make(chan *compound.CBATLiquidateBorrow)
 	compoundliqcCOMP := make(chan *compound.CCOMPLiquidateBorrow)
@@ -72,7 +72,7 @@ func main() {
 	// go watchAaveDeposit(aavedep, aavelp, client)
 	// go watchAaveBorrow(aavebrw, aavelp, client)
 	go watchCompoundcETHLiquidation(compoundliq, compoundcETHClient)
-	go watchCompoundcETHMint(compoundmin, compoundcETHClient)
+	// go watchCompoundcETHMint(compoundmin, compoundcETHClient)
 	go watchCompoundcBATLiquidation(compoundliqcBAT, compoundcBATClient)
 	go watchCompoundcCOMPLiquidation(compoundliqcCOMP, compoundcCOMPClient)
 	go watchCompoundcDAILiquidation(compoundliqcDAI, compoundcDAIClient)
@@ -81,7 +81,7 @@ func main() {
 	// <-aavedep
 	// <-aavebrw
 	<-compoundliq
-	<-compoundmin
+	// <-compoundmin
 	<-compoundliqcBAT
 	<-compoundliqcCOMP
 	<-compoundliqcDAI
