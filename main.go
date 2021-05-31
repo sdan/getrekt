@@ -26,11 +26,11 @@ func main() {
 		log.Fatal("new aave lp", err)
 	}
 
-	// incoming := make(chan *aave.AaveLPLiquidationCall)
-	incoming := make(chan *aave.AaveLPDeposit)
+	incoming := make(chan *aave.AaveLPLiquidationCall)
+	// incoming := make(chan *aave.AaveLPDeposit)
 
-	// sub, err := lp.WatchLiquidationCall(nil, incoming, nil, nil, nil)
-	sub, err := lp.WatchDeposit(nil, incoming, nil, nil, nil)
+	sub, err := lp.WatchLiquidationCall(nil, incoming, nil, nil, nil)
+	// sub, err := lp.WatchDeposit(nil, incoming, nil, nil, nil)
 	if err != nil {
 		log.Fatal("sub aave liq call", err)
 	}
@@ -40,7 +40,7 @@ func main() {
 		case err := <-sub.Err():
 			log.Fatal("sub aave chan", err)
 		case vLog := <-incoming:
-			token, err := token.NewToken(vLog.Reserve, client)
+			token, err := token.NewToken(vLog.CollateralAsset, client)
 			if err != nil {
 				log.Fatal("token retrieve", err)
 			}
@@ -49,7 +49,7 @@ func main() {
 				log.Fatal("token name", err)
 			}
 			fbalance := new(big.Float)
-			fbalance.SetString(vLog.Amount.String())
+			fbalance.SetString(vLog.LiquidatedCollateralAmount.String())
 			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
 			fmt.Printf("amt:%.2f coin: %s, tx: %s\n", tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
 			// sendTweet(tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
