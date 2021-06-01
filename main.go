@@ -111,6 +111,11 @@ func watchAaveLiquidation(incoming chan *aave.AaveLPLiquidationCall, lp *aave.Aa
 			fbalance := new(big.Float)
 			fbalance.SetString(vLog.LiquidatedCollateralAmount.String())
 			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
+			if tokenName == "USDC" || tokenName == "cUSDC" || tokenName == "USDT" || tokenName == "cUSDT" {
+				tokenAmt = new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(6)))
+			} else if tokenName == "WBTC" || tokenName == "cWBTC" {
+				tokenAmt = new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(8)))
+			}
 			fmt.Printf("Liquidated amt:%.2f coin: %s, tx: %s\n", tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
 			twitter.SendTweet("Liquidated", tokenAmt, tokenName, vLog.Raw.TxHash.Hex(), "Aave")
 		}
