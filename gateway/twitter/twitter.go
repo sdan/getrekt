@@ -11,8 +11,8 @@ import (
 
 func SendTweet(event string, amt *big.Float, coin string, tx string, protocol string) {
 	fmt.Println("tweet start")
-	config := oauth1.NewConfig("UqrmoFCcV8cIYMjG7GKrNspJw", "HBFXoAAOScCko9XSc9Yk3O1WKI4TnrAOjr4FdkrlqJYP5zzUvv")
-	token := oauth1.NewToken("1248497327125303297-9Pgqq4pWC3anVhPAB1WtW7IEfirWAi", "G2nkE4ItUES0RnpSKxWtNA7kCcra8OW0cMzxYCLia9XZ2")
+	config := oauth1.NewConfig("UqrmoFCcV8cIYMjG7GKrNspJ", "HBFXoAAOScCko9XSc9Yk3O1WKI4TnrAOjr4FdkrlqJYP5zzUv")
+	token := oauth1.NewToken("1248497327125303297-9Pgqq4pWC3anVhPAB1WtW7IEfirWA", "G2nkE4ItUES0RnpSKxWtNA7kCcra8OW0cMzxYCLia9XZ")
 	httpClient := config.Client(oauth1.NoContext, token)
 
 	// Twitter client
