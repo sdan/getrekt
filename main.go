@@ -5,13 +5,15 @@ import (
 	"log"
 	"math"
 	"math/big"
+	"strconv"
+	"strings"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/sdan/getrekt/contracts/aave"
 	"github.com/sdan/getrekt/contracts/compound"
 	"github.com/sdan/getrekt/contracts/token"
-	"github.com/sdan/getrekt/gateway/twitter"
+	// "github.com/sdan/getrekt/gateway/twitter"
 )
 
 func main() {
@@ -69,7 +71,7 @@ func main() {
 	compoundliqcDAI := make(chan *compound.CDAILiquidateBorrow)
 
 	go watchAaveLiquidation(aaveliq, aavelp, client)
-	// go watchAaveDeposit(aavedep, aavelp, client)
+	//go watchAaveDeposit(aavedep, aavelp, client)
 	// go watchAaveBorrow(aavebrw, aavelp, client)
 	go watchCompoundcETHLiquidation(compoundliq, compoundcETHClient)
 	// go watchCompoundcETHMint(compoundmin, compoundcETHClient)
@@ -106,7 +108,7 @@ func watchAaveLiquidation(incoming chan *aave.AaveLPLiquidationCall, lp *aave.Aa
 			}
 			tokenName, err := token.Name(nil)
 			if err != nil {
-				log.Fatal("token name", err)
+				tokenName = "Maker"
 			}
 			fbalance := new(big.Float)
 			fbalance.SetString(vLog.LiquidatedCollateralAmount.String())
@@ -117,39 +119,52 @@ func watchAaveLiquidation(incoming chan *aave.AaveLPLiquidationCall, lp *aave.Aa
 				tokenAmt = new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(8)))
 			}
 			fmt.Printf("Liquidated amt:%.2f coin: %s, tx: %s\n", tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
-			twitter.SendTweet("Liquidated", tokenAmt, tokenName, vLog.Raw.TxHash.Hex(), "Aave")
+			// twitter.SendTweet("Liquidated", tokenAmt, tokenName, vLog.Raw.TxHash.Hex(), "Aave")
 		}
 	}
 }
 
-// func watchAaveDeposit(incoming chan *aave.AaveLPDeposit, lp *aave.AaveLP, client *ethclient.Client) {
-// 	sub, err := lp.WatchDeposit(nil, incoming, nil, nil, nil)
-// 	if err != nil {
-// 		log.Fatal("sub aave liq call", err)
-// 	}
+func convertBytesToString(b []byte) string {
+	s := make([]string, len(b))
+	for i := range b {
+		s[i] = strconv.Itoa(int(b[i]))
+	}
+	return strings.Join(s, ",")
+}
 
-// 	for {
-// 		select {
-// 		case err := <-sub.Err():
-// 			log.Fatal("sub aave chan", err)
-// 		case vLog := <-incoming:
-// 			fmt.Println("tx hash", vLog.Raw.TxHash.Hex())
-// 			token, err := token.NewToken(vLog.Reserve, client)
-// 			if err != nil {
-// 				log.Fatal("token retrieve", err)
-// 			}
-// 			tokenName, err := token.Name(nil)
-// 			if err != nil {
-// 				log.Fatal("token name", err)
-// 			}
-// 			fbalance := new(big.Float)
-// 			fbalance.SetString(vLog.Amount.String())
-// 			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
-// 			fmt.Printf("Deposit amt:%.2f coin: %s, tx: %s\n", tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
-// 			twitter.SendTweet("Deposited", tokenAmt, tokenName, vLog.Raw.TxHash.Hex(), "Aave")
-// 		}
-// 	}
-// }
+func watchAaveDeposit(incoming chan *aave.AaveLPDeposit, lp *aave.AaveLP, client *ethclient.Client) {
+	sub, err := lp.WatchDeposit(nil, incoming, nil, nil, nil)
+	if err != nil {
+		log.Fatal("sub aave liq call", err)
+	}
+
+	for {
+		select {
+		case err := <-sub.Err():
+			log.Fatal("sub aave chan DEPOSIT", err)
+		case vLog := <-incoming:
+			fmt.Println("tx hash", vLog.Raw.TxHash.Hex())
+			token, err := token.NewToken(vLog.Reserve, client)
+			if err != nil {
+				log.Fatal("token retrieve", err)
+			}
+			tokenName, err := token.Name(nil)
+			if err != nil {
+				tokenName = "Maker"
+			}
+			fbalance := new(big.Float)
+			fbalance.SetString(vLog.Amount.String())
+			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
+			if tokenName == "USDC" || tokenName == "cUSDC" || tokenName == "USDT" || tokenName == "cUSDT" {
+				tokenAmt = new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(6)))
+			} else if tokenName == "WBTC" || tokenName == "cWBTC" {
+				tokenAmt = new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(8)))
+			}
+			fmt.Printf("Deposit amt:%.2f coin: %s, tx: %s\n", tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
+			// twitter.SendTweet("Deposited", tokenAmt, tokenName, vLog.Raw.TxHash.Hex(), "Aave")
+		}
+	}
+}
 
 // func watchAaveBorrow(incoming chan *aave.AaveLPBorrow, lp *aave.AaveLP, client *ethclient.Client) {
 // 	sub, err := lp.WatchBorrow(nil, incoming, nil, nil, nil)
@@ -175,7 +190,7 @@ func watchAaveLiquidation(incoming chan *aave.AaveLPLiquidationCall, lp *aave.Aa
 // 			fbalance.SetString(vLog.Amount.String())
 // 			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
 // 			fmt.Printf("Borrowed amt:%.2f coin: %s, tx: %s\n", tokenAmt, tokenName, vLog.Raw.TxHash.Hex())
-// 			twitter.SendTweet("Borrowed", tokenAmt, tokenName, vLog.Raw.TxHash.Hex(), "Aave")
+// 			// twitter.SendTweet("Borrowed", tokenAmt, tokenName, vLog.Raw.TxHash.Hex(), "Aave")
 // 		}
 // 	}
 // }
@@ -196,7 +211,7 @@ func watchCompoundcETHLiquidation(incoming chan *compound.CETHLiquidateBorrow, l
 			fbalance.SetString(vLog.RepayAmount.String())
 			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
 			fmt.Printf("Liquidated amt:%.2f coin: %s, tx: %s\n", tokenAmt, "cETH", vLog.Raw.TxHash.Hex())
-			twitter.SendTweet("Liquidated", tokenAmt, "cETH", vLog.Raw.TxHash.Hex(), "Compound")
+			// twitter.SendTweet("Liquidated", tokenAmt, "cETH", vLog.Raw.TxHash.Hex(), "Compound")
 		}
 	}
 }
@@ -217,7 +232,7 @@ func watchCompoundcETHMint(incoming chan *compound.CETHMint, lp *compound.CETH) 
 			fbalance.SetString(vLog.MintAmount.String())
 			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
 			fmt.Printf("Minted amt:%.2f coin: %s, tx: %s\n", tokenAmt, "cETH", vLog.Raw.TxHash.Hex())
-			twitter.SendTweet("Minted", tokenAmt, "cETH", vLog.Raw.TxHash.Hex(), "Compound")
+			// twitter.SendTweet("Minted", tokenAmt, "cETH", vLog.Raw.TxHash.Hex(), "Compound")
 		}
 	}
 }
@@ -238,7 +253,7 @@ func watchCompoundcDAILiquidation(incoming chan *compound.CDAILiquidateBorrow, l
 			fbalance.SetString(vLog.RepayAmount.String())
 			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
 			fmt.Printf("Liquidated amt:%.2f coin: %s, tx: %s\n", tokenAmt, "cDAI", vLog.Raw.TxHash.Hex())
-			twitter.SendTweet("Liquidated", tokenAmt, "cDAI", vLog.Raw.TxHash.Hex(), "Compound")
+			// twitter.SendTweet("Liquidated", tokenAmt, "cDAI", vLog.Raw.TxHash.Hex(), "Compound")
 		}
 	}
 }
@@ -259,7 +274,7 @@ func watchCompoundcBATLiquidation(incoming chan *compound.CBATLiquidateBorrow, l
 			fbalance.SetString(vLog.RepayAmount.String())
 			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
 			fmt.Printf("Liquidated amt:%.2f coin: %s, tx: %s\n", tokenAmt, "cBAT", vLog.Raw.TxHash.Hex())
-			twitter.SendTweet("Liquidated", tokenAmt, "cBAT", vLog.Raw.TxHash.Hex(), "Compound")
+			// twitter.SendTweet("Liquidated", tokenAmt, "cBAT", vLog.Raw.TxHash.Hex(), "Compound")
 		}
 	}
 }
@@ -280,7 +295,7 @@ func watchCompoundcCOMPLiquidation(incoming chan *compound.CCOMPLiquidateBorrow,
 			fbalance.SetString(vLog.RepayAmount.String())
 			tokenAmt := new(big.Float).Quo(fbalance, big.NewFloat(math.Pow10(18)))
 			fmt.Printf("Liquidated amt:%.2f coin: %s, tx: %s\n", tokenAmt, "cCOMP", vLog.Raw.TxHash.Hex())
-			twitter.SendTweet("Liquidated", tokenAmt, "cCOMP", vLog.Raw.TxHash.Hex(), "Compound")
+			// twitter.SendTweet("Liquidated", tokenAmt, "cCOMP", vLog.Raw.TxHash.Hex(), "Compound")
 		}
 	}
 }
